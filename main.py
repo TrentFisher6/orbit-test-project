@@ -1,3 +1,5 @@
+import os
+
 import functions_framework
 from google.cloud import bigquery
 from flask import jsonify
@@ -8,10 +10,10 @@ import pytz
 client = bigquery.Client()
 
 # Define the project, dataset, and table details
-PROJECT_ID = "orbit-test-project-468319"
+PROJECT_ID = os.getenv("PROJECT_ID")
 DATASET_ID = "ecommerce_orders"
 TABLE_ID = "orders_raw"
-VIEW_ID = "latest_orders_v"
+VIEW_ID = "latest_order_v"
 
 @functions_framework.http
 def handle_request(req):
