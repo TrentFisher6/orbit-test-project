@@ -21,7 +21,7 @@ steps:
       - 'deploy'
       - 'order-processor'
       - '--gen2'
-      - '-project=${_PROJECT_ID}'
+      - '--project=${_PROJECT_ID}'
       - '--region=us-central1'
       - '--runtime=python311'
       - '--source=.'
