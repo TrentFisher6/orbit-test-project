@@ -1,0 +1,33 @@
+# This is the configuration file for Google Cloud Build.
+# It defines the steps to lint and deploy the Cloud Function.
+
+steps:
+  # Step 1: Lint the Python code using flake8
+  # This step ensures code quality and catches simple errors before deployment.
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install flake8
+        flake8 ./cloud_function/
+
+  # Step 2: Deploy the Cloud Function
+  # This step only runs if the linting step succeeds.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'order-processor'
+      - '--gen2'
+      - '--project=orbit-test-project-468319'
+      - '--region=us-central1'
+      - '--runtime=python311'
+      - '--source=.'
+      - '--entry-point=handle_request'
+      - '--trigger-http'
+      - '--allow-unauthenticated'
+
+# Timeout for the entire build
+timeout: '1200s'
