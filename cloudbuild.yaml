@@ -29,5 +29,10 @@ steps:
       - '--trigger-http'
       - '--allow-unauthenticated'
 
+options:
+  # Use a dedicated, regional log bucket.
+  defaultLogsBucketBehavior: 'REGIONAL_USER_OWNED_BUCKET'
+  logging: 'GCS_ONLY'
+
 # Timeout for the entire build
 timeout: '1200s'
