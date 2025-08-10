@@ -6,6 +6,8 @@ from flask import jsonify
 import datetime
 import pytz
 
+# test if cicd worked?
+
 # Initialize the BigQuery client globally to reuse the connection
 client = bigquery.Client()
 
