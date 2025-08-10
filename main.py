@@ -17,6 +17,7 @@ DATASET_ID = "ecommerce_orders"
 TABLE_ID = "orders_raw"
 VIEW_ID = "latest_order_v"
 
+
 @functions_framework.http
 def handle_request(req):
     """
@@ -28,8 +29,9 @@ def handle_request(req):
     elif req.method == 'GET':
         return handle_get(req)
     else:
-        # Return a 405 Method Not Allowed error for other methods like PUT, DELETE
+        # Return a 405 Method Not Allowed error for other methods
         return 'Method Not Allowed', 405
+
 
 def handle_post(req):
     """Handles POST requests to insert order data into BigQuery."""
@@ -51,7 +53,8 @@ def handle_post(req):
         if not isinstance(order, dict):
             errors.append("Invalid item in array: not a JSON object.")
             continue
-        if not all(k in order for k in ['order_id', 'order_date', 'order_status']):
+        if not all(k in order for k in
+                   ['order_id', 'order_date', 'order_status']):
             errors.append(f"Missing required field in order: {order}")
             continue
 
@@ -70,16 +73,19 @@ def handle_post(req):
     # --- Insert into BigQuery ---
     try:
         table_ref = client.dataset(DATASET_ID).table(TABLE_ID)
-        table = client.get_table(table_ref)  # API request to get table schema
+        table = client.get_table(table_ref)  # API request to get schema
         insert_errors = client.insert_rows_json(table, rows_to_insert)
 
         if not insert_errors:
-            return 'Data successfully inserted.', 201 # 201 Created is more appropriate
+            return 'Data successfully inserted.', 201
         else:
-            return jsonify({"success": False, "errors": insert_errors}), 500
+            return jsonify({"success": False,
+                            "errors": insert_errors}), 500
 
     except Exception as e:
-        return f'An error occurred while inserting data into BigQuery: {e}', 500
+        return (f'An error occurred while inserting data into BigQuery: '
+                f'{e}'), 500
+
 
 def handle_get(req):
     """Handles GET requests to retrieve the latest entry for each order."""
