@@ -4,10 +4,10 @@ This project is a complete, serverless data processing service on Google Cloud P
 
 ## Live Demo & API Endpoint
 
-[![Looker Studio](https://img.shields.io/badge/Live%20Dashboard-Looker%20Studio-blue?style=for-the-badge&logo=looker)](https://lookerstudio.google.com/s/ocd-REC5Quk)
+[![Looker Studio](https://img.shields.io/badge/Live%20Dashboard-Looker%20Studio-blue?style=for-the-badge&logo=looker)](https://lookerstudio.google.com/reporting/2a540948-fda8-4a5f-ae30-51c9c1390f4c)
 [![API Endpoint](https://img.shields.io/badge/API%20Endpoint-Live-green?style=for-the-badge)](https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor)
 
-*   **Live Dashboard:** [https://lookerstudio.google.com/s/ocd-REC5Quk](https://lookerstudio.google.com/s/ocd-REC5Quk)
+*   **Live Dashboard:** [https://lookerstudio.google.com/s/ocd-REC5Quk](https://lookerstudio.google.com/reporting/2a540948-fda8-4a5f-ae30-51c9c1390f4c)
 *   **API Function URL:** `https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor`
 
 ### Quickstart API Testing
