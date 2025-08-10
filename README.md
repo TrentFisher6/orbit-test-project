@@ -1,15 +1,38 @@
 # eCommerce Order Processing Service
 
-This project is a serverless data processing service built on Google Cloud Platform. It provides an HTTP API to accept and store eCommerce order data in BigQuery and is automatically deployed via a CI/CD pipeline.
+This project is a complete, serverless data processing service on Google Cloud Platform. It provides a public HTTP API, an immutable data backend in BigQuery, and a live Looker Studio dashboard. The entire infrastructure is defined as code and deployed automatically via a CI/CD pipeline.
 
-## Features
+## Live Demo & API Endpoint
 
-*   **Serverless HTTP API:** Accepts `POST` requests to ingest order data and `GET` requests to retrieve the current state of all orders.
-*   **Immutable Data Store:** All versions of order data are stored chronologically in BigQuery, ensuring no data is ever lost.
-*   **Layered Data Views:** Multiple BigQuery views provide clean, purpose-built datasets for analysis (latest order status, first-order events, lifecycle metrics) without duplicating data.
-*   **Automated CI/CD Deployment:** Pushing to the `main` branch automatically triggers a Cloud Build pipeline that lints the code and deploys the Cloud Function.
-*   **Infrastructure as Code:** All database objects (tables, views) are defined in version-controlled SQL files.
-*   **Data Visualization:** A Looker Studio dashboard provides business insights into the data.
+[![Looker Studio](https://img.shields.io/badge/Live%20Dashboard-Looker%20Studio-blue?style=for-the-badge&logo=looker)](https://lookerstudio.google.com/s/ocd-REC5Quk)
+[![API Endpoint](https://img.shields.io/badge/API%20Endpoint-Live-green?style=for-the-badge)](https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor)
+
+*   **Live Dashboard:** [https://lookerstudio.google.com/s/ocd-REC5Quk](https://lookerstudio.google.com/s/ocd-REC5Quk)
+*   **API Function URL:** `https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor`
+
+### Quickstart API Testing
+
+You can test the live API directly using `curl`.
+
+**1. POST new order data:**
+```bash
+curl -X POST https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor \
+-H "Content-Type: application/json" \
+-d '[{"order_id": "XYZ-999", "order_date": "2025-08-15T12:00:00Z", "order_details": "Test Item from README", "order_status": "Processing"}]'
+```
+
+**2. GET the latest state of all orders:**
+```bash
+curl https://us-central1-orbit-test-project-468319.cloudfunctions.net/order-processor
+```
+
+## Key Features
+
+*   **Serverless HTTP API:** Accepts `POST` and `GET` requests via a Gen 2 Google Cloud Function.
+*   **Immutable Data Store:** All order versions are stored chronologically in BigQuery, ensuring no data is ever lost.
+*   **Layered Data Views:** Multiple BigQuery views provide clean, purpose-built datasets for analysis (latest status, first-order events, lifecycle metrics) without duplicating data.
+*   **Automated CI/CD:** Pushing to the `main` branch automatically triggers a Cloud Build pipeline that lints and deploys the Cloud Function.
+*   **Infrastructure as Code (IaC):** All database objects (tables, views) are defined in version-controlled SQL files.
 
 ## Tech Stack
 
@@ -45,97 +68,62 @@ The repository is organized to separate application code from database logic.
 
 ---
 
-## Setup & Deployment
+## Automated Deployment (CI/CD)
 
-This project is configured for automated deployment. After a one-time setup of the GCP environment, all subsequent deployments of the Cloud Function are handled by the CI/CD pipeline.
+The primary deployment method for this project is through the automated CI/CD pipeline defined in `cloudbuild.yaml`.
 
-### 1. One-Time Manual Setup
-
-These steps are required once to prepare the Google Cloud project.
-
-1.  **Configure Local SDK:**
-    Set your active project in the gcloud CLI:
-    ```bash
-    gcloud config set project YOUR_PROJECT_ID
-    ```
-
-2.  **Enable APIs:**
-    Enable all necessary APIs for the project.
-    ```bash
-    gcloud services enable \
-      cloudfunctions.googleapis.com \
-      run.googleapis.com \
-      bigquery.googleapis.com \
-      cloudbuild.googleapis.com \
-      artifactregistry.googleapis.com
-    ```
-
-3.  **Create BigQuery Resources:**
-    Create the dataset and the initial `orders_raw` table from its DDL file.
-    ```bash
-    bq --location=US mk ecommerce_orders
-    bq mk --table "$(cat sql/tables/orders_raw.sql)"
-    ```
-    Then, create the analytical views from their definition files.
-    ```bash
-    bq mk --use_legacy_sql=false --view "$(<sql/views/latest_order_v.sql)" ecommerce_orders.latest_order_v
-    bq mk --use_legacy_sql=false --view "$(<sql/views/first_order_events_v.sql)" ecommerce_orders.first_order_events_v
-    bq mk --use_legacy_sql=false --view "$(<sql/views/order_lifecycle_metrics_v.sql)" ecommerce_orders.order_lifecycle_metrics_v
-    ```
-
-4.  **Create CI/CD Service Account:**
-    For security, the CI/CD pipeline uses a dedicated service account. Create it and grant it the necessary permissions.
-    ```bash
-    # Create the service account
-    gcloud iam service-accounts create cloud-build-function-deployer \
-      --display-name="Cloud Build Function Deployer"
-
-    # Grant permissions
-    # Note: Replace YOUR_PROJECT_ID and the service account email where needed.
-    gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:cloud-build-function-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" --role="roles/cloudfunctions.developer"
-    gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:cloud-build-function-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" --role="roles/run.admin"
-    gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:cloud-build-function-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" --role="roles/storage.admin"
-    gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:cloud-build-function-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser"
-    ```
-
-### 2. Automated Deployment (CI/CD)
-
-The CI/CD pipeline is defined in `cloudbuild.yaml` and is triggered by pushes to the `main` branch.
-
-1.  **Connect Repository:** In the GCP Console, go to **Cloud Build > Triggers**, connect your Git repository, and create a new trigger.
-2.  **Configure Trigger:**
-    *   **Event:** Push to a branch
-    *   **Branch:** `^main$`
-    *   **Configuration:** Cloud Build configuration file (`cloudbuild.yaml`)
-    *   **Advanced > Service Account:** Select the `cloud-build-function-deployer` service account you created above.
-3.  **Push to Deploy:** With the trigger active, any `git push origin main` will now automatically:
-    *   Lint the Python code with `flake8`.
-    *   Deploy the Cloud Function if linting succeeds.
+*   **Trigger:** The pipeline runs on any `git push` to the `main` branch.
+*   **Process:**
+    1.  **Lint:** The Python code is linted with `flake8` to ensure code quality.
+    2.  **Deploy:** If linting passes, Cloud Build deploys the function using the configuration in the YAML file.
+*   **Identity:** The pipeline executes using a dedicated, user-managed service account (`cloud-build-function-deployer`) with the principle of least privilege in mind.
 
 ---
 
-## API Usage
+## Manual Setup & Replication
 
-**Base URL:** The trigger URL provided after deployment.
+These steps are for the one-time setup of a new GCP project or for anyone wishing to replicate the environment from scratch.
 
-### POST /
-Ingests an array of order data.
-*   **`curl` Example:**
-    ```bash
-    curl -X POST <YOUR_FUNCTION_URL> -H "Content-Type: application/json" -d '[{"order_id": "A1001", "order_date": "2025-08-08T10:00:00Z", "order_details": "Laptop, Mouse", "order_status": "Processing"}]'
-    ```
+### 1. Configure Local Environment
+```bash
+# Set your target project in the gcloud CLI
+gcloud config set project YOUR_PROJECT_ID
 
-### GET /
-Retrieves the most recent entry for every unique order ID.
-*   **`curl` Example:**
-    ```bash
-    curl <YOUR_FUNCTION_URL>
-    ```
+# Enable all necessary APIs
+gcloud services enable \
+  cloudfunctions.googleapis.com \
+  run.googleapis.com \
+  bigquery.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com
+```
 
----
+### 2. Create BigQuery Resources
+Create the dataset, the `orders_raw` table from its DDL file, and all analytical views.
+```bash
+bq --location=US mk ecommerce_orders
+bq mk --table "$(cat sql/tables/orders_raw.sql)"
 
-## Looker Studio Dashboard
+# Create the analytical views
+bq mk --use_legacy_sql=false --view "$(<sql/views/latest_order_v.sql)" ecommerce_orders.latest_order_v
+bq mk --use_legacy_sql=false --view "$(<sql/views/first_order_events_v.sql)" ecommerce_orders.first_order_events_v
+bq mk --use_legacy_sql=false --view "$(<sql/views/order_lifecycle_metrics_v.sql)" ecommerce_orders.order_lifecycle_metrics_v
+```
 
-A dashboard has been created for data visualization. It provides at-a-glance metrics on order statuses, performance, and trends.
+### 3. Create and Configure CI/CD Service Account
+This dedicated service account is used by the Cloud Build trigger for secure deployments.
+```bash
+# Create the service account
+gcloud iam service-accounts create cloud-build-function-deployer \
+  --display-name="Cloud Build Function Deployer"
 
-**[Link to Looker Studio Dashboard]**
+# Grant it the necessary permissions
+SA_EMAIL="cloud-build-function-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/cloudfunctions.developer"
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/run.admin"
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/storage.admin"
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:$SA_EMAIL" --role="roles/iam.serviceAccountUser"
+```
+
+### 4. Connect Cloud Build Trigger
+In the GCP Console, navigate to **Cloud Build > Triggers** to connect your repository and create a new trigger pointing to `cloudbuild.yaml` and using the service account created above.
