@@ -10,7 +10,7 @@ steps:
       - '-c'
       - |
         pip install flake8
-        flake8 ./cloud_function/
+        flake8 .
 
   # Step 2: Deploy the Cloud Function
   # This step only runs if the linting step succeeds.
@@ -21,7 +21,7 @@ steps:
       - 'deploy'
       - 'order-processor'
       - '--gen2'
-      - '--project=orbit-test-project-468319'
+      - '-project=${_PROJECT_ID}'
       - '--region=us-central1'
       - '--runtime=python311'
       - '--source=.'
