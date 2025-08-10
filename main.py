@@ -6,13 +6,11 @@ from flask import jsonify
 import datetime
 import pytz
 
-# test if cicd worked?
-
 # Initialize the BigQuery client globally to reuse the connection
 client = bigquery.Client()
 
 # Define the project, dataset, and table details
-PROJECT_ID = os.getenv("PROJECT_ID")
+PROJECT_ID = os.getenv("GCP_PROJECT")
 DATASET_ID = "ecommerce_orders"
 TABLE_ID = "orders_raw"
 VIEW_ID = "latest_order_v"
