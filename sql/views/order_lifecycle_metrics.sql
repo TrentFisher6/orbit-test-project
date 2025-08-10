@@ -1,5 +1,6 @@
 -- This query transforms the event stream into a single summary row per order
 -- and calculates the duration between key lifecycle events.
+-- It is used for the Operational Performance KPI's in the Looker Studio dashboard.
 SELECT
     order_id,
 

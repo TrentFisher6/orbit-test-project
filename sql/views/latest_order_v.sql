@@ -2,7 +2,6 @@
 SELECT
  order_id,
  order_date,
- EXTRACT(HOUR FROM order_date AT TIME ZONE 'America/New_York') AS order_hour,
  order_details,
  order_status
 FROM (
