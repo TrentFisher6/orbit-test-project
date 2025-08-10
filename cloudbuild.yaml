@@ -3,7 +3,6 @@
 
 steps:
   # Step 1: Lint the Python code using flake8
-  # This step ensures code quality and catches simple errors before deployment.
   - name: 'python:3.11-slim'
     entrypoint: 'bash'
     args:
@@ -13,7 +12,6 @@ steps:
         flake8 .
 
   # Step 2: Deploy the Cloud Function
-  # This step only runs if the linting step succeeds.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -21,7 +19,7 @@ steps:
       - 'deploy'
       - 'order-processor'
       - '--gen2'
-      - '--project=${_PROJECT_ID}'
+      - '--project=$PROJECT_ID'
       - '--region=us-central1'
       - '--runtime=python311'
       - '--source=.'
