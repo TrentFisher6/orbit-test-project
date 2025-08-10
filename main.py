@@ -1,16 +1,25 @@
-import os
-
 import functions_framework
 from google.cloud import bigquery
 from flask import jsonify
 import datetime
 import pytz
+import urllib.request
 
 # Initialize the BigQuery client globally to reuse the connection
 client = bigquery.Client()
 
+
+# Query the project ID from the GCP metadata service
+def get_project_id():
+    req = urllib.request.Request(
+        "http://metadata.google.internal/computeMetadata/v1/project/project-id"
+    )
+    req.add_header("Metadata-Flavor", "Google")
+    return urllib.request.urlopen(req).read().decode()
+
+
 # Define the project, dataset, and table details
-PROJECT_ID = os.getenv("GCP_PROJECT")
+PROJECT_ID = get_project_id()
 DATASET_ID = "ecommerce_orders"
 TABLE_ID = "orders_raw"
 VIEW_ID = "latest_order_v"

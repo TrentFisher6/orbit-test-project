@@ -24,7 +24,7 @@ This project is a serverless data processing service built on Google Cloud Platf
 
 ## Project Structure
 
-The repository is organized to separate application code from database logic, which is a best practice for maintainability.
+The repository is organized to separate application code from database logic.
 
 ```
 /
